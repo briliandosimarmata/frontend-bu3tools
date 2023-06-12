@@ -1,0 +1,33 @@
+<div #toastMessagePanel class="absolute inset-x-0 top-4" *ngFor="let toastMessage of toastMessages">
+    <div [id]="toastMessage.id" *ngIf="toastMessage.isShown" 
+        [className]=" toastMessage.transitionClass + ' ease-in-out duration-500 '" #toastMessageElement 
+        (mouseenter)="clearCountDownHidingToastMessage(toastMessage)" 
+        (mouseleave)="countDownHidingToastMessage(toastMessageElement, toastMessage)">
+        <div
+            class="mx-auto flex flex-nowrap overflow-clip border border-slate-700 drop-shadow-2xl rounded-md w-4/12 h-20 max-h-32 bg-indigo-100">
+    
+            <div *ngIf="toastMessage.type === 'success'" class="flex-none bg-green-600 h-5/6 w-1.5 self-center ml-2 rounded-full">
+            </div>
+            <fa-icon *ngIf="toastMessage.type === 'success'" [icon]="['fas', 'check']"
+                ngClass="flex-none ml-4 mr-4 w-7 h-7 grid place-content-center rounded-full text-white text-lg self-center bg-green-600"></fa-icon>
+    
+            <div *ngIf="toastMessage.type === 'error'" class="flex-none bg-red-600 h-5/6 w-1.5 self-center ml-2 rounded-full">
+            </div>
+            <fa-icon *ngIf="toastMessage.type === 'error'" [icon]="['fas', 'xmark']"
+                ngClass="flex-none ml-4 mr-4 w-7 h-7 grid place-content-center rounded-full text-white text-lg self-center bg-red-600"></fa-icon>
+    
+            <div class="grid flex-auto py-3 h-full self-center mr-2 ">
+                <p class="w-72 font-semibold whitespace-nowrap text-ellipsis overflow-hidden">
+                    {{toastMessage.message.code}}
+                </p>
+                <p class="w-full text-xs whitespace-nowrap text-ellipsis overflow-hidden">
+                    {{toastMessage.message.description}}
+                </p>
+            </div>
+    
+            <button (click)="hideAndClearToastMessage(toastMessageElement)">
+                <fa-icon [icon]="['far', 'xmark-circle']" ngClass="grid place-content-center self-center ml-6 mr-4"></fa-icon>
+            </button>
+        </div>
+    </div>
+</div>
