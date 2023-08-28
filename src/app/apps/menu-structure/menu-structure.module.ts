@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MenuStructureService } from './menu-structure.service';
-import { HttpModule } from '../http/http.module';
+import { HttpModule } from '../../http/http.module';
 import { MenuStructureComponent } from './menu-structure.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';

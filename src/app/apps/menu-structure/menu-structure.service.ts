@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { HttpResponse } from '../http/http-response';
-import { HttpService } from '../http/http.service';
+import { HttpResponse } from '../../http/http-response';
+import { HttpService } from '../../http/http.service';
 import { MenuStructure } from './menu-structure';
 
 @Injectable({

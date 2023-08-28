@@ -39,6 +39,13 @@ export class HttpService {
     });
   }
 
+  put(url: string, body: any, pathVariable: string, httpParams?: HttpParams): Observable<HttpResponse> {
+    return this.httpClient.put(`${this.apiPrefixDefault}/${url}/${pathVariable}`, body, {
+      params: httpParams,
+      headers: this.headerDefault
+    });
+  }
+
   download(method: 'GET' | 'POST' | 'PUT', url: string, body?: any, httpParams?: HttpParams): Observable<Blob> {
     switch (method) {
       case 'POST':

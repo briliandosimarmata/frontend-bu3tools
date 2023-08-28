@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';import { saveAs } from 'file-saver';
-import { LoadingAnimationService } from '../utility/loading-animation/loading-animation.service';
-import { ToastMessageService } from '../utility/toast-message/toast-message.service';
+import { LoadingAnimationService } from '../../utility/loading-animation/loading-animation.service';
+import { ToastMessageService } from '../../utility/toast-message/toast-message.service';
 import { MenuStructure } from './menu-structure';
 import { MenuStructureService } from './menu-structure.service';
 

@@ -1,0 +1,23 @@
+<ul
+  class="flex flex-wrap text-sm font-medium text-center text-gray-500 border-b border-gray-200 dark:border-gray-700 dark:text-gray-400">
+  <li class="mr-2">
+    <a (click)="toggleTabs(1)" class="inline-block p-4 rounded-t-lg hover:text-white hover:bg-green-500 cursor-pointer"
+      [ngClass]="{'bg-green-500 text-white': openTab === 1}">Endpoint</a>
+  <li class="mr-2">
+    <a (click)="toggleTabs(2)" class="inline-block p-4 rounded-t-lg hover:text-white hover:bg-green-500 cursor-pointer"
+      [ngClass]="{'bg-green-500 text-white': openTab === 2}">Otorisasi Modul Terhadap Endpoint</a>
+  </li>
+</ul>
+
+<div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
+  <div class="px-4 py-5 flex-auto">
+    <div class="tab-content tab-space">
+      <div [ngClass]="{'hidden': openTab !== 1, 'block': openTab === 1}">
+        <app-api-authorization-enpoint></app-api-authorization-enpoint>
+      </div>
+      <div [ngClass]="{'hidden': openTab !== 2, 'block': openTab === 2}">
+        <app-api-authorization-authorized></app-api-authorization-authorized>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="grid grid-cols-4 gap-4 mx-20">
+    <div>
+        <label class="block">
+            <span class="block text-sm font-medium text-slate-700">Modul Name</span>
+            <input type="text" class="rounded px-1 py-1 border-solid border-2 border-black" />
+        </label>
+    </div>
+    <div>
+        <label class="block">
+            <span class="block text-sm font-medium text-slate-700">Modul Id</span>
+            <input type="text" class="rounded px-1 py-1 border-solid border-2 border-black" />
+        </label>
+    </div>
+    <div class="self-end mb-1">
+        <button class="rounded-none bg-green-400 text-white px-2 py-1">Cari</button>
+    </div>
+</div>
+<div class="flex mx-20 my-5">
+    <div class="self-end mb-1">
+        <button class="rounded-none bg-green-400 text-white px-2 py-1">Save All</button>
+    </div>
+</div>
+<div class="relative overflow-x-auto shadow-md sm:rounded-lg mx-20 mt-5">
+    <table class="w-full text-sm text-left text-gray-500">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3">
+                    URI
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    HTTP Method
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Permission
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Description
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Delete
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="bg-white border-b hover:bg-gray-50" *ngFor="let item of data">
+                <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    {{item.endpoint.uri}}
+                </td>
+                <td class="px-6 py-4">
+                    {{item.endpoint.httpMethod}}
+                </td>
+                <td class="px-6 py-4">
+                    {{item.endpoint.permission}}
+                </td>
+                <td class="px-6 py-4">
+                    {{item.endpoint.description}}
+                </td>
+                <td class="px-6 py-4">
+                    <button class="rounded-none bg-red-400 text-white px-2 py-1">Delete</button>
+                </td>
+            </tr>
+            <tr class="bg-white border-b hover:bg-gray-50">
+                <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    <input type="text" class="rounded px-1 py-1 border-solid border-2 border-black" />
+                </td>
+                <td class="px-6 py-4">
+                    <select class="form-select px-2 py-1 rounded border-solid border-2 border-black bg-white">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4">
+                    <select class="form-select px-2 py-1 rounded border-solid border-2 border-black bg-white">
+                        <option value="EXECUTE">EXECUTE</option>
+                        <option value="SAVE">SAVE</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4">
+                    <textarea class="rounded px-1 py-1 border-solid border-2 border-black" disabled></textarea>
+                </td>
+                <td class="px-6 py-4">
+                    <button class="rounded-none bg-red-400 text-white px-2 py-1">Delete</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class="flex mx-20 my-5">
+    <button class="rounded-none bg-green-400 text-white px-2 py-1">Add New Authorized</button>
+</div>

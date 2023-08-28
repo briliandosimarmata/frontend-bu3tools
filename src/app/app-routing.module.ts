@@ -9,7 +9,11 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        loadChildren: () => import('./menu-structure/menu-structure.module').then(m => m.MenuStructureModule)
+        loadChildren: () => import('./apps/menu-structure/menu-structure.module').then(m => m.MenuStructureModule)
+      },
+      {
+        path: 'api-authorization',
+        loadChildren: () => import('./apps/api-authorization/api-authorization.module').then((m) => m.ApiAuthorizationModule)
       }
     ]
   }
