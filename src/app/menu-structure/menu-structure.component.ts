@@ -1,9 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';import { saveAs } from 'file-saver';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { saveAs } from 'file-saver';
 import { LoadingAnimationService } from '../utility/loading-animation/loading-animation.service';
 import { ToastMessageService } from '../utility/toast-message/toast-message.service';
 import { MenuStructure } from './menu-structure';
 import { MenuStructureService } from './menu-structure.service';
+
 
 @Component({
   selector: 'app-menu-structure',
@@ -77,7 +79,7 @@ export class MenuStructureComponent implements OnInit {
     private loadingAnimationService: LoadingAnimationService,
     private toastMessageService: ToastMessageService) {
 
-    this.urlApi = 'mst-menu-structure'
+    this.urlApi = 'mst-menu-structure';
 
     this.parentTempMenuStructures = [];
     this.parentMenuStructures = [];
@@ -173,7 +175,7 @@ export class MenuStructureComponent implements OnInit {
           let matchLength = prMS.menuSequence?.match(pKeyMenuSequence)?.length;
           return matchLength !== undefined && matchLength !== null && matchLength > 0;
         }
-      )
+      );
     }
   }
 
@@ -207,11 +209,9 @@ export class MenuStructureComponent implements OnInit {
   private searchChildMenuByIdAndSequence(pMenuId: string, pMenuSequence: string) {
     this.childMenuStructures = [...this.childTempMenuStructures];
 
-    let pMenuIdPresent: boolean =
-      pMenuId.trim() !== '' && pMenuId.trim().length > 4;
+    let pMenuIdPresent: boolean = pMenuId.trim() !== '' && pMenuId.trim().length > 4;
 
-    let pMenuSequencePresent: boolean =
-      pMenuSequence.trim() !== '' && pMenuSequence.trim().length > 0;
+    let pMenuSequencePresent: boolean = pMenuSequence.trim() !== '' && pMenuSequence.trim().length > 0;
 
     if (pMenuSequencePresent || pMenuIdPresent) {
       this.childMenuStructures = this.childMenuStructures.filter(
@@ -235,14 +235,26 @@ export class MenuStructureComponent implements OnInit {
 
           return isMenuIdFound && isMenuSequenceFound;
         }
-      )
+      );
     }
+  }
+
+  getBase64(file: any) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
   }
 
   protected upload(file: any): void {
     let fileReader: FileReader = new FileReader();
     let resArrObjJS: any[] = [];
     let ready: boolean = false;
+    this.getBase64(file).then(
+      data => console.log(data)
+    );
 
     let refreshMenuStructureDatas = () => {
       if (ready) {
@@ -250,11 +262,11 @@ export class MenuStructureComponent implements OnInit {
           .subscribe(
             {
               next: (res) => {
-                let parMenList: MenuStructure[] =
-                  MenuStructure.fromApiResponses(res.data.parentMenuStructures);
+                console.log(res);
 
-                let chMenList: MenuStructure[] =
-                  MenuStructure.fromApiResponses(res.data.childMenuStructures);
+                let parMenList: MenuStructure[] = MenuStructure.fromApiResponses(res.data.parentMenuStructures);
+
+                let chMenList: MenuStructure[] = MenuStructure.fromApiResponses(res.data.childMenuStructures);
 
                 parMenList.forEach(
                   (menuStructure) => {
@@ -263,6 +275,7 @@ export class MenuStructureComponent implements OnInit {
                       this.fb.group(
                         {
                           menuId: menuStructure.menuId,
+                          variable: menuStructure.variable,
                           menuSequence: menuStructure.menuSequence,
                           menuDesc: menuStructure.menuDesc,
                           iconClass: menuStructure.iconClass,
@@ -278,6 +291,7 @@ export class MenuStructureComponent implements OnInit {
                       this.fb.group(
                         {
                           menuId: menuStructure.menuId,
+                          variable: menuStructure.variable,
                           menuSequence: menuStructure.menuSequence,
                           menuDesc: menuStructure.menuDesc,
                           routingPath: menuStructure.routingPath,
@@ -293,12 +307,12 @@ export class MenuStructureComponent implements OnInit {
                 this.childTempMenuStructures = [...chMenList];
 
                 this.uploadSectionClass = ' transition duration-500 ease-out -translate-x-full opacity-0 ';
-                this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 '
-                
+                this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
+
                 this.toastMessageService.success({
                   code: 'Unggah Berhasil.',
                   description: 'Data struktur menu sebelumnya berhasil diunggah.'
-                })
+                });
               },
               error: (err) => {
                 this.toastMessageService.error(err);
@@ -308,64 +322,71 @@ export class MenuStructureComponent implements OnInit {
                 this.loadingAnimationService.hideAnimation();
               }
             }
-          )
+          );
 
         return;
       }
       setTimeout(refreshMenuStructureDatas, 1000);
-    }
+    };
 
     refreshMenuStructureDatas();
 
     fileReader.onload = () => {
       this.loadingAnimationService.showAnimation();
 
-      let res: string = typeof fileReader.result === 'string' ? fileReader.result : ''
+      let res: string = typeof fileReader.result === 'string' ? fileReader.result : '';
+
+
       res = res.replace(/(MENU_INFO_MASTER).*?(,)/g, '');
       res = res.replace(/(\/\/).*?(\n)/g, '\n');
       res = res.replace(/(?:\r\n|\r|\n)/g, ' ');
 
-      res.match(/(?<=\[).*?(?=\])/g)?.forEach(
-        (arrObj) => {
-          if (arrObj.trim().length > 0) {
-            arrObj.trim().match(/(?<=\{).*?(?=\})/g)?.forEach(
-              (obj) => {
-                let resObjJs: any = {};
-                obj.trim().split(',').forEach(
-                  (field) => {
-                    if (field.trim().length > 0) {
-                      let fieldSet: string[] = field.trim().split(':');
-                      let key = fieldSet[0].trim();
+      res.match(/const.*?(;)/g)?.forEach((arrObj) => {
+        let isHasObj = false;
+        arrObj.trim().match(/(?<=\{).*?(?=\})/g)?.forEach(
+          (obj) => {
+            let resObjJs: any = {};
+            obj.trim().split(',').forEach(
+              (field) => {
+                if (field.trim().length > 0) {
+                  let fieldSet: string[] = field.trim().split(':');
+                  let key = fieldSet[0].trim();
 
-                      if (key === 'icon') {
-                        key = 'iconClass'
-                      }
-
-                      if (key === 'url') {
-                        key = 'routingPath'
-                      }
-
-                      let value = fieldSet[1].trim().replace(/\'/g, '');
-
-                      resObjJs[key] = value;
-                    }
+                  if (key === 'icon') {
+                    key = 'iconClass';
                   }
-                )
-                resArrObjJS.push(resObjJs);
-              }
-            )
-          }
-        }
-      )
 
+                  if (key === 'url') {
+                    key = 'routingPath';
+                  }
+
+                  let value = fieldSet[1].trim().replace(/\'/g, '');
+
+                  resObjJs[key] = value;
+                  isHasObj = true
+
+                }
+              }
+            );
+            if(isHasObj){
+              let variable = arrObj.trim().match(/const.*?(:)/g)?.[0];
+              variable = variable?.replace('const','');
+              variable = variable?.replace(':','').trim();
+              resObjJs['variable'] = variable;
+            }
+            resArrObjJS.push(resObjJs);
+          });
+      });
+      
+      
       ready = true;
-    }
+    };
 
     fileReader.readAsText(file);
   }
 
   protected generate(pData: any): void {
-    let menStructReqBody: MenuStructure[] = []
+    let menStructReqBody: MenuStructure[] = [];
 
     let parentMenuStructures: any = pData.parentMenuForm;
     let childMenuStructures: any = pData.childMenuForm;
@@ -374,7 +395,7 @@ export class MenuStructureComponent implements OnInit {
 
     for (const key in parentMenuStructures) {
       if (Object.prototype.hasOwnProperty.call(parentMenuStructures, key)) {
-        if (parentMenuStructures[key].iconClass === '') {
+        if (parentMenuStructures[key].iconClass === '' && parentMenuStructures[key].variable == '') {
           continue;
         }
 
@@ -384,14 +405,15 @@ export class MenuStructureComponent implements OnInit {
 
     for (const key in childMenuStructures) {
       if (Object.prototype.hasOwnProperty.call(childMenuStructures, key)) {
-        if (childMenuStructures[key].routingPath === '') {
+        if (childMenuStructures[key].routingPath === '' && childMenuStructures[key].variable == '') {
           continue;
         }
 
         menStructReqBody.push(childMenuStructures[key]);
       }
     }
-
+    console.log(menStructReqBody);
+    
     this.menuStructureService.downloadMenuInfoTS(this.urlApi, menStructReqBody).subscribe(
       {
         next: (res) => {
@@ -415,7 +437,7 @@ export class MenuStructureComponent implements OnInit {
           this.loadingAnimationService.hideAnimation();
         }
       }
-    )
+    );
   }
 
   protected download() {
@@ -433,7 +455,7 @@ export class MenuStructureComponent implements OnInit {
       this.toastMessageService.error(null, true, {
         code: 'File Belum Diunggah.',
         description: `Anda harus menggungah file terlebih dahulu!`
-      })
+      });
       return;
     }
 
@@ -441,29 +463,28 @@ export class MenuStructureComponent implements OnInit {
       this.toastMessageService.error(null, true, {
         code: 'Ektensi File Salah.',
         description: `Ektensi file harus '.ts' dengan tipe 'text/vnd.qt.linguist'!`
-      })
+      });
 
       throw `Wrong file type. Extension should be '.ts' with type 'text/vnd.qt.linguist' ! `;
     }
 
     let arr: any[] = [];
 
-    table.forEach(
-      (val: any) => {
-        arr.push(val);
-      }
-    );
-
+    // table.forEach(
+    //   (val: any) => {
+    //     arr.push(val);
+    //   }
+    // );
     this.upload(file);
   }
 
   protected backToUploadSection() {
-    this.generatorSectionClass = ' transition duration-500 ease-out translate-x-full opacity-0 '
-    this.uploadSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 '
+    this.generatorSectionClass = ' transition duration-500 ease-out translate-x-full opacity-0 ';
+    this.uploadSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
   }
 
   protected backToGenerateSection() {
-    this.downloadSectionClass = ' transition duration-500 ease-out translate-x-full opacity-0 '
-    this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 '
+    this.downloadSectionClass = ' transition duration-500 ease-out translate-x-full opacity-0 ';
+    this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
   }
 }

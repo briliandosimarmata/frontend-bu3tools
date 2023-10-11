@@ -1,5 +1,6 @@
 export class MenuStructure {
     menuId?: string = '';
+    variable?: string = '';
     menuSequence?: string = '';
     menuDesc?: string = '';
     modulId?: string = '';
