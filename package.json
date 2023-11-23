@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --configuration production --named-chunks",
+    "build": "ng build --configuration production --named-chunks --base-href .",
     "postbuild": "mkdir dist/bu3-tools/.sourceMaps; mv dist/bu3-tools/*.map dist/bu3-tools/.sourceMaps",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
