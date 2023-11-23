@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MenuStructureRoutingModule } from './menu-structure-routing.module';
 import { MenuStructureComponent } from './menu-structure.component';
+import { AutocompleteModule } from '../ui-component/autocomplete/autocomplete.module';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { MenuStructureComponent } from './menu-structure.component';
     HttpModule,
     FormsModule,
     ReactiveFormsModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    AutocompleteModule
   ],
   exports: [
     MenuStructureComponent

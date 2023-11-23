@@ -3,8 +3,10 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { saveAs } from 'file-saver';
 import { LoadingAnimationService } from '../utility/loading-animation/loading-animation.service';
 import { ToastMessageService } from '../utility/toast-message/toast-message.service';
-import { MenuStructure } from './menu-structure';
+import { MenuStructure, ModulType } from './menu-structure';
+import { MenuInfo, ModulUrlInfo, UploadParam } from './menu-structure.params';
 import { MenuStructureService } from './menu-structure.service';
+import { mapMenuInfoData, readMenuData, readModulUrlData } from './menu-stucture.utils';
 
 
 @Component({
@@ -34,6 +36,7 @@ export class MenuStructureComponent implements OnInit {
   private tempChildMenuId: string;
   private tempChildMenuSequence: string;
 
+  protected isSyncMenuIconAppear!: boolean;
   protected isParentMenuAppear!: boolean;
   protected isChildMenuAppear!: boolean;
 
@@ -65,11 +68,18 @@ export class MenuStructureComponent implements OnInit {
                                               px-4 py-2
                                               rounded-none`;
 
+  protected buttonSyncMenuIconClass!: string;
   protected buttonParentCurrentClass!: string;
   protected buttonChildCurrentClass!: string;
 
   protected fileTS!: any;
   protected fileTSContent!: any;
+
+  public syncMenuIconForm: FormGroup;
+  protected menuStructures: MenuStructure[];
+
+  protected menuStructuresWithIconExist: MenuStructure[];
+  protected newModulUrlInfoList: MenuStructure[];
 
   @ViewChild('parentMenuTabButton') parentMenuTabButton!: ElementRef;
 
@@ -91,9 +101,16 @@ export class MenuStructureComponent implements OnInit {
     this.tempChildMenuId = '';
     this.tempChildMenuSequence = '';
 
+    this.syncMenuIconForm = this.fb.group({});
+    this.menuStructures = [];
+
+    this.menuStructuresWithIconExist = [];
+    this.newModulUrlInfoList = [];
+
     this.menuSettingsForm = this.fb.group({
       parentMenuForm: this.parentMenuForm,
-      childMenuForm: this.childMenuForm
+      childMenuForm: this.childMenuForm,
+      syncMenuIconForm: this.syncMenuIconForm
     });
 
     this.copyFileTSContentForm = this.fb.group(
@@ -102,7 +119,7 @@ export class MenuStructureComponent implements OnInit {
       }
     );
 
-    this.showParentMenu();
+    this.showSyncMenuIcon();
   }
 
   ngOnInit(): void {
@@ -113,7 +130,8 @@ export class MenuStructureComponent implements OnInit {
         menuDesc: '',
         modulId: '',
         iconClass: '',
-        routingPath: ''
+        routingPath: '',
+        variable: ''
       }
     );
 
@@ -123,13 +141,28 @@ export class MenuStructureComponent implements OnInit {
         menuSequence: '',
         menuDesc: '',
         iconClass: '',
+        variable: ''
       }
     ));
+  }
+
+  protected showSyncMenuIcon(): void {
+    this.buttonSyncMenuIconClass = this.buttonTabActiveClass;
+    this.isSyncMenuIconAppear = true;
+
+    this.buttonParentCurrentClass = this.buttonTabInactiveClass;
+    this.isParentMenuAppear = false;
+
+    this.buttonChildCurrentClass = this.buttonTabInactiveClass;
+    this.isChildMenuAppear = false;
   }
 
   protected showParentMenu(): void {
     this.buttonParentCurrentClass = this.buttonTabActiveClass;
     this.isParentMenuAppear = true;
+
+    this.buttonSyncMenuIconClass = this.buttonTabInactiveClass;
+    this.isSyncMenuIconAppear = false;
 
     this.buttonChildCurrentClass = this.buttonTabInactiveClass;
     this.isChildMenuAppear = false;
@@ -139,18 +172,19 @@ export class MenuStructureComponent implements OnInit {
     this.buttonParentCurrentClass = this.buttonTabInactiveClass;
     this.isParentMenuAppear = false;
 
+    this.buttonSyncMenuIconClass = this.buttonTabInactiveClass;
+    this.isSyncMenuIconAppear = false
+
     this.buttonChildCurrentClass = this.buttonTabActiveClass;
     this.isChildMenuAppear = true;
   }
 
   protected showListParentMenuAll() {
-    this.parentMenuStructures = [...this.parentTempMenuStructures];
+    this.parentTempMenuStructures = [...this.parentMenuStructures];
   }
 
   protected showListParentMenuWithoutIcon() {
-    this.parentTempMenuStructures = [...this.parentMenuStructures];
-
-    this.parentMenuStructures = this.parentMenuStructures.filter(
+    this.parentTempMenuStructures = this.parentMenuStructures.filter(
       (val) => {
         let iconClass: string = this.parentMenuForm
           .controls[`form_${val.modulId}`].value.iconClass;
@@ -160,22 +194,30 @@ export class MenuStructureComponent implements OnInit {
     );
   }
 
-  protected onSearchParentMenuBySequence(event: any) {
-    this.searchParentMenuBySequence(event.target.value);
-  }
+  protected onSearchParentMenu(event: any) {
+    const keyword = event.target.value;
+    if (keyword !== undefined && keyword !== null) {
+      const keywordEl = keyword.trim().split(/\s+/g);
+      const menuId = keywordEl[0];
+      const menuSeq = keywordEl[1];
 
-  private searchParentMenuBySequence(pMenuSequence: string) {
+      if (keyword.trim().length > 0) {
+        this.parentTempMenuStructures = this.parentMenuStructures.filter(
+          (prMS) => {
+            if (prMS.menuId?.includes(menuId)) {
+              if (menuSeq) {
+                return prMS.menuSequence?.includes(menuSeq);
+              } else {
+                return true;
+              }
+            }
 
-    this.parentMenuStructures = [...this.parentTempMenuStructures];
-
-    if (pMenuSequence.trim() !== '' && pMenuSequence.trim().length > 0) {
-      this.parentMenuStructures = this.parentMenuStructures.filter(
-        (prMS) => {
-          let pKeyMenuSequence = new RegExp(pMenuSequence, 'g');
-          let matchLength = prMS.menuSequence?.match(pKeyMenuSequence)?.length;
-          return matchLength !== undefined && matchLength !== null && matchLength > 0;
-        }
-      );
+            return false;
+          }
+        );
+      } else {
+        this.parentTempMenuStructures = [...this.parentMenuStructures]
+      }
     }
   }
 
@@ -248,173 +290,195 @@ export class MenuStructureComponent implements OnInit {
     });
   }
 
-  protected upload(file: any): void {
-    let fileReader: FileReader = new FileReader();
-    let resArrObjJS: any[] = [];
-    let ready: boolean = false;
-    this.getBase64(file).then(
-      data => console.log(data)
-    );
+  protected upload(file: any, uploadParam?: UploadParam): void {
+    let frMenuInfo: FileReader = new FileReader();
+    let frModulUrlInfo: FileReader = new FileReader();
+    let menuInfoList: MenuInfo[] = [];
+    let modulUrlInfoList: ModulUrlInfo[] = [];
+    let isMenuInfoListReady: boolean = false;
+    let isModulUrlInfoListReady: boolean = false;
 
-    let refreshMenuStructureDatas = () => {
-      if (ready) {
-        this.menuStructureService.getParentAndChildMenuStructures(this.urlApi, resArrObjJS)
+
+    this.menuStructureService.getAll(this.urlApi).subscribe({
+      next: (res) => {
+        this.menuStructures = MenuStructure.fromApiResponses(res.data);
+      },
+      error: (err) => {
+        this.toastMessageService.error(err);
+      }
+    })
+
+    frMenuInfo.onload = (ev) => {
+      if (typeof ev.target?.result === 'string'
+        && uploadParam?.menuListVariableName !== undefined) {
+
+        menuInfoList = readMenuData(ev.target?.result,
+          uploadParam?.menuListVariableName);
+
+        isMenuInfoListReady = true;
+      }
+    }
+
+    frModulUrlInfo.onload = (ev) => {
+      if (typeof ev.target?.result === 'string'
+        && uploadParam?.modulUrlListVariableName !== undefined) {
+
+        modulUrlInfoList = readModulUrlData(ev.target?.result,
+          uploadParam?.modulUrlListVariableName);
+
+        isModulUrlInfoListReady = true;
+      }
+    }
+
+    let doMapMenuInfoData = () => {
+      if (isMenuInfoListReady && isModulUrlInfoListReady) {
+        this.loadingAnimationService.showAnimation();
+
+        this.parentMenuStructures = [];
+        this.parentTempMenuStructures = [];
+        let menuData = mapMenuInfoData(menuInfoList, modulUrlInfoList);
+        this.newModulUrlInfoList = menuData.modulUrlInfoList;
+
+        menuData.menuInfoList.forEach(
+          (menuInfo) => {
+            this.syncMenuIconForm.addControl(
+              `sync_form_${menuInfo.menuId}${menuInfo.menuSequence}`,
+              this.fb.group(
+                {
+                  menuId: menuInfo.menuId,
+                  menuSequence: menuInfo.menuSequence,
+                  iconClass: menuInfo.iconClass,
+                  newMenu: null
+                }));
+          }
+        )
+
+        this.menuStructuresWithIconExist = menuData.menuInfoList;
+
+        this.menuStructureService.getExistingMenuStructuresSettings(this.urlApi, menuData)
           .subscribe(
             {
               next: (res) => {
-                console.log(res);
+                let menus: any[] = [];
 
-                let parMenList: MenuStructure[] = MenuStructure.fromApiResponses(res.data.parentMenuStructures);
+                if (res.data) {
+                  menus = res.data;
+                  console.log(res.data);
+                }
 
-                let chMenList: MenuStructure[] = MenuStructure.fromApiResponses(res.data.childMenuStructures);
+                menus.forEach(
+                  (menuStructEl) => {
+                    if (menuStructEl.modulType !== undefined
+                      && menuStructEl.modulType === ModulType.M.toString()) {
+                      if (menuStructEl.iconClass === undefined
+                        || menuStructEl.iconClass === null
+                        || menuStructEl.iconClass.trim().length === 0) {
 
-                parMenList.forEach(
-                  (menuStructure) => {
-                    this.parentMenuForm.addControl(
-                      `form_${menuStructure.modulId}`,
-                      this.fb.group(
-                        {
-                          menuId: menuStructure.menuId,
-                          variable: menuStructure.variable,
-                          menuSequence: menuStructure.menuSequence,
-                          menuDesc: menuStructure.menuDesc,
-                          iconClass: menuStructure.iconClass,
-                        }
-                      ));
+                        this.parentMenuStructures.push(
+                          MenuStructure.fromApiResponse(menuStructEl));
+
+                        this.parentTempMenuStructures = [...this.parentMenuStructures];
+
+                        this.parentMenuForm.addControl(`form_${menuStructEl.modulId}`,
+                          this.fb.group(
+                            {
+                              menuId: menuStructEl.menuId,
+                              menuSequence: menuStructEl.menuSequence,
+                              menuDesc: menuStructEl.menuDesc,
+                              iconClass: menuStructEl.iconClass
+                            }
+                          ));
+                      }
+                    }
                   }
-                );
+                )
 
-                chMenList.forEach(
-                  (menuStructure) => {
-                    this.childMenuForm.addControl(
-                      `form_${menuStructure.modulId}`,
-                      this.fb.group(
-                        {
-                          menuId: menuStructure.menuId,
-                          variable: menuStructure.variable,
-                          menuSequence: menuStructure.menuSequence,
-                          menuDesc: menuStructure.menuDesc,
-                          routingPath: menuStructure.routingPath,
-                        }
-                      ));
-                  }
-                );
-
-                this.parentMenuStructures = parMenList;
-                this.parentTempMenuStructures = [...parMenList];
-
-                this.childMenuStructures = chMenList;
-                this.childTempMenuStructures = [...chMenList];
+                this.loadingAnimationService.hideAnimation();
 
                 this.uploadSectionClass = ' transition duration-500 ease-out -translate-x-full opacity-0 ';
                 this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
 
-                this.toastMessageService.success({
-                  code: 'Unggah Berhasil.',
-                  description: 'Data struktur menu sebelumnya berhasil diunggah.'
-                });
               },
               error: (err) => {
                 this.toastMessageService.error(err);
                 this.loadingAnimationService.hideAnimation();
-              },
-              complete: () => {
-                this.loadingAnimationService.hideAnimation();
               }
             }
-          );
-
-        return;
+          )
+      } else {
+        setTimeout(doMapMenuInfoData, 1000);
       }
-      setTimeout(refreshMenuStructureDatas, 1000);
-    };
+    }
 
-    refreshMenuStructureDatas();
+    doMapMenuInfoData();
 
-    fileReader.onload = () => {
-      this.loadingAnimationService.showAnimation();
-
-      let res: string = typeof fileReader.result === 'string' ? fileReader.result : '';
-
-
-      res = res.replace(/(MENU_INFO_MASTER).*?(,)/g, '');
-      res = res.replace(/(\/\/).*?(\n)/g, '\n');
-      res = res.replace(/(?:\r\n|\r|\n)/g, ' ');
-
-      res.match(/const.*?(;)/g)?.forEach((arrObj) => {
-        let isHasObj = false;
-        arrObj.trim().match(/(?<=\{).*?(?=\})/g)?.forEach(
-          (obj) => {
-            let resObjJs: any = {};
-            obj.trim().split(',').forEach(
-              (field) => {
-                if (field.trim().length > 0) {
-                  let fieldSet: string[] = field.trim().split(':');
-                  let key = fieldSet[0].trim();
-
-                  if (key === 'icon') {
-                    key = 'iconClass';
-                  }
-
-                  if (key === 'url') {
-                    key = 'routingPath';
-                  }
-
-                  let value = fieldSet[1].trim().replace(/\'/g, '');
-
-                  resObjJs[key] = value;
-                  isHasObj = true
-
-                }
-              }
-            );
-            if(isHasObj){
-              let variable = arrObj.trim().match(/const.*?(:)/g)?.[0];
-              variable = variable?.replace('const','');
-              variable = variable?.replace(':','').trim();
-              resObjJs['variable'] = variable;
-            }
-            resArrObjJS.push(resObjJs);
-          });
-      });
-      
-      
-      ready = true;
-    };
-
-    fileReader.readAsText(file);
+    frMenuInfo.readAsText(uploadParam?.fileMenuInfo);
+    frModulUrlInfo.readAsText(uploadParam?.fileModulUrlInfo);
   }
 
   protected generate(pData: any): void {
-    let menStructReqBody: MenuStructure[] = [];
-
-    let parentMenuStructures: any = pData.parentMenuForm;
-    let childMenuStructures: any = pData.childMenuForm;
+    let newSyncMenuStructures: MenuStructure[] = [];
+    let syncMenuStructures: any[] = [];
 
     this.loadingAnimationService.showAnimation();
 
-    for (const key in parentMenuStructures) {
-      if (Object.prototype.hasOwnProperty.call(parentMenuStructures, key)) {
-        if (parentMenuStructures[key].iconClass === '' && parentMenuStructures[key].variable == '') {
-          continue;
-        }
-
-        menStructReqBody.push(parentMenuStructures[key]);
+    for (const key in pData.syncMenuIconForm) {
+      if (Object.prototype.hasOwnProperty.call(pData.syncMenuIconForm, key)) {
+        syncMenuStructures.push(pData.syncMenuIconForm[key])
       }
     }
 
-    for (const key in childMenuStructures) {
-      if (Object.prototype.hasOwnProperty.call(childMenuStructures, key)) {
-        if (childMenuStructures[key].routingPath === '' && childMenuStructures[key].variable == '') {
-          continue;
+    syncMenuStructures.forEach(
+      (syncMenuStructure) => {
+        let newSyncMenuStructure: MenuStructure = {};
+
+        if (syncMenuStructure.newMenu !== null) {
+          let newMenu = syncMenuStructure.newMenu;
+          newSyncMenuStructure.menuId = newMenu.menuId;
+          newSyncMenuStructure.menuSequence = newMenu.menuSequence;
+          newSyncMenuStructure.iconClass = syncMenuStructure.iconClass;
+        } else {
+          let isNewMenuHasNotPresent = newSyncMenuStructures.findIndex((el) => {
+            return el.menuId === syncMenuStructure.menuId
+              && el.menuSequence === syncMenuStructure.menuSequence;
+          }) === -1;
+
+          if (!isNewMenuHasNotPresent) {
+            return;
+          }
+
+          newSyncMenuStructure.menuId = syncMenuStructure.menuId;
+          newSyncMenuStructure.menuSequence = syncMenuStructure.menuSequence;
+          newSyncMenuStructure.iconClass = syncMenuStructure.iconClass;
         }
 
-        menStructReqBody.push(childMenuStructures[key]);
+        newSyncMenuStructures.push(newSyncMenuStructure)
+      }
+    );
+
+    for (const key in pData.parentMenuForm) {
+      if (Object.prototype.hasOwnProperty.call(pData.parentMenuForm, key)) {
+        let parentMenuStructure = pData.parentMenuForm[key];
+        if (parentMenuStructure.iconClass !== undefined
+          && parentMenuStructure.iconClass !== null
+          && parentMenuStructure.iconClass.trim().length > 0) {
+
+          let newSyncMenuStructure: MenuStructure = {};
+          newSyncMenuStructure.menuId = parentMenuStructure.menuId;
+          newSyncMenuStructure.menuSequence = parentMenuStructure.menuSequence;
+          newSyncMenuStructure.iconClass = parentMenuStructure.iconClass;
+          newSyncMenuStructures.push(newSyncMenuStructure);
+
+        }
       }
     }
-    console.log(menStructReqBody);
-    
-    this.menuStructureService.downloadMenuInfoTS(this.urlApi, menStructReqBody).subscribe(
+
+
+
+    this.menuStructureService.downloadMenuInfoTS(this.urlApi, {
+      menuInfoList: newSyncMenuStructures,
+      modulUrlInfoList: this.newModulUrlInfoList
+    }).subscribe(
       {
         next: (res) => {
           const fileByte = typeof res.data === 'string'
@@ -429,9 +493,11 @@ export class MenuStructureComponent implements OnInit {
 
           this.generatorSectionClass = ' transition duration-500 ease-out -translate-x-full opacity-0 ';
           this.downloadSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
+          this.loadingAnimationService.hideAnimation();
         },
         error: (err) => {
           this.toastMessageService.error(err);
+          this.loadingAnimationService.hideAnimation();
         },
         complete: () => {
           this.loadingAnimationService.hideAnimation();
@@ -448,10 +514,24 @@ export class MenuStructureComponent implements OnInit {
     navigator.clipboard.writeText(content);
   }
 
-  protected onUpload(table: any, file: any) {
-    this.urlApi = table;
+  protected onUpload(uploadParam: UploadParam) {
+    this.urlApi = uploadParam.table;
 
-    if (file === undefined || file === null) {
+    if ((uploadParam.menuListVariableName === undefined
+      || uploadParam.menuListVariableName.trim().length === 0)
+      || (uploadParam.modulUrlListVariableName === undefined
+        || uploadParam.modulUrlListVariableName.trim().length === 0)) {
+      this.toastMessageService.error(null, true, {
+        code: 'Nama Variable Kosong',
+        description: `Semua nama variable wajib diisi!`
+      });
+      return;
+    }
+
+    if (uploadParam.fileMenuInfo === undefined
+      || uploadParam.fileMenuInfo === null
+      || uploadParam.fileModulUrlInfo === undefined
+      || uploadParam.fileModulUrlInfo === null) {
       this.toastMessageService.error(null, true, {
         code: 'File Belum Diunggah.',
         description: `Anda harus menggungah file terlebih dahulu!`
@@ -459,7 +539,10 @@ export class MenuStructureComponent implements OnInit {
       return;
     }
 
-    if (!file.name.split('.')[1].match('ts') && !file.type.match('text/vnd.qt.linguist')) {
+    if ((!uploadParam.fileMenuInfo.name.split('.')[1].match('ts')
+      && !uploadParam.fileMenuInfo.type.match('text/vnd.qt.linguist'))
+      || (!uploadParam.fileModulUrlInfo.name.split('.')[1].match('ts')
+        && !uploadParam.fileModulUrlInfo.type.match('text/vnd.qt.linguist'))) {
       this.toastMessageService.error(null, true, {
         code: 'Ektensi File Salah.',
         description: `Ektensi file harus '.ts' dengan tipe 'text/vnd.qt.linguist'!`
@@ -468,14 +551,38 @@ export class MenuStructureComponent implements OnInit {
       throw `Wrong file type. Extension should be '.ts' with type 'text/vnd.qt.linguist' ! `;
     }
 
-    let arr: any[] = [];
+    this.upload(uploadParam.fileMenuInfo, uploadParam);
+  }
 
-    // table.forEach(
-    //   (val: any) => {
-    //     arr.push(val);
-    //   }
-    // );
-    this.upload(file);
+  protected onSelectAutoCompleteSyncMenuIcon(data: any) {
+    let parMenIdx = this.parentMenuStructures.findIndex(
+      (parMenEl) => {
+        return parMenEl.menuId === data.menuId
+          && parMenEl.menuSequence === data.menuSequence;
+      }
+    );
+
+    if (parMenIdx !== -1) {
+      this.parentMenuStructures.splice(parMenIdx, 1);
+      this.parentMenuForm.removeControl('form_' + data.modulId)
+    }
+  }
+
+  protected onBlurAutoCompleteSyncMenuIcon(data: any) {
+    if (data !== undefined && data !== null) {
+      this.parentMenuStructures.push(
+        MenuStructure.fromApiResponse(data));
+
+      this.parentMenuForm.addControl(`form_${data.modulId}`,
+        this.fb.group(
+          {
+            menuId: data.menuId,
+            menuSequence: data.menuSequence,
+            menuDesc: data.menuDesc,
+            iconClass: data.iconClass
+          }
+        ));
+    }
   }
 
   protected backToUploadSection() {
@@ -486,5 +593,9 @@ export class MenuStructureComponent implements OnInit {
   protected backToGenerateSection() {
     this.downloadSectionClass = ' transition duration-500 ease-out translate-x-full opacity-0 ';
     this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
+  }
+
+  log(data: any) {
+    console.log(data);
   }
 }

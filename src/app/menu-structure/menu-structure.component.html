@@ -13,8 +13,8 @@
                 <div class="flex relative">
                     <select name="table" id="table" #selectTable
                         class="border appearance-none w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none focus:border-indigo-500/100">
-                        <option value="mst-menu-structure">mst_menu_structure</option>
                         <option value="adm-menu-structure">adm_menu_structure</option>
+                        <option value="mst-menu-structure">mst_menu_structure</option>
                     </select>
                     <button (click)="selectTable.click" class="right-0 absolute self-center pr-3 self-center">
                         <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>
@@ -22,15 +22,46 @@
                 </div>
             </label>
 
-            <div class="mt-3">
-                <input #fileTSInput type="file"
-                    class="p-6 -m-6 hover:file:cursor-pointer file:drop-shadow-lg file:rounded-full file:py-1 file:px-4 file:border-indigo-200/30 file:bg-indigo-50 file:font-semibold file:text-indigo-700"
-                    [multiple]="false" />
-            </div>
+            <label class="grid mt-4">
+                <span class="block text-sm font-medium text-slate-700">Menu List Variable Name</span>
+                <input #menuVarNameInput type="text" value="MENU_INFO_LIST" class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none 
+            focus:border-indigo-500/100 focus:shadow-lg focus:shadow-indigo-500/40" />
+            </label>
+
+            <label class="grid mt-4 mb-2">
+                <span class="block text-sm font-medium text-slate-700">Modul Url List Variable Name</span>
+                <input #modulUrlVarNameInput type="text" value="MODUL_URL_INFO_LIST" class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none 
+            focus:border-indigo-500/100 focus:shadow-lg focus:shadow-indigo-500/40" />
+            </label>
+
+            <label class="grid mt-6">
+                <div class="flex relative justify-center py-4 px-2 border-2 border-slate-700 rounded-lg">
+                    <span class="absolute bg-white px-1 font-medium text-slate-700 -top-3 left-2">File
+                        menu-info.ts</span>
+                    <input #fileMenuInfoTSInput type="file"
+                        class="p-6 -m-6 hover:file:cursor-pointer file:drop-shadow-lg file:rounded-full file:py-1 file:px-4 file:border-indigo-200/30 file:bg-indigo-50 file:font-semibold file:text-indigo-700"
+                        [multiple]="false" />
+                </div>
+            </label>
+
+            <label class="grid mt-6">
+                <div class="flex relative justify-center py-4 px-2 border-2 border-slate-700 rounded-lg">
+                    <span class="absolute bg-white px-1 font-medium text-slate-700 -top-3 left-2">File
+                        modul-url-info.ts</span>
+                    <input #fileModulUrlInfoTSInput type="file"
+                        class="p-6 -m-6 hover:file:cursor-pointer file:drop-shadow-lg file:rounded-full file:py-1 file:px-4 file:border-indigo-200/30 file:bg-indigo-50 file:font-semibold file:text-indigo-700"
+                        [multiple]="false" />
+                </div>
+            </label>
 
             <button
                 class="mt-10 mb-4 place-self-center w-fit h-fit hover:bg-blue-400/100 active:bg-blue-500/100 bg-blue-500/100 py-2 px-5 text-white rounded-lg"
-                (click)="onUpload(selectTable.value, fileTSInput.files?.item(0))">
+                (click)="onUpload({
+                    table: selectTable.value,
+                    fileMenuInfo: fileMenuInfoTSInput.files?.item(0),
+                    fileModulUrlInfo: fileModulUrlInfoTSInput.files?.item(0),
+                    menuListVariableName: menuVarNameInput.value,
+                    modulUrlListVariableName: modulUrlVarNameInput.value})">
                 <fa-icon [icon]="['fas', 'upload']" class="mr-2"></fa-icon>
                 Upload
             </button>
@@ -39,9 +70,11 @@
 
     <div id="generatorSection" [className]="'container absolute ' + generatorSectionClass">
         <div class="border border-transparent border-b-slate-300 relative w-full flex items-stretch mb-2">
+            <button [ngClass]="buttonSyncMenuIconClass" #parentMenuTabButton (click)="showSyncMenuIcon()">Sync Menu
+                Icon</button>
             <button [ngClass]="buttonParentCurrentClass" #parentMenuTabButton (click)="showParentMenu()">Parent
                 Menu</button>
-            <button [ngClass]="buttonChildCurrentClass" (click)="showChildMenu()">Child Menu</button>
+            <!-- <button [ngClass]="buttonChildCurrentClass" (click)="showChildMenu()">Child Menu</button> -->
             <div class="right-0 absolute text-end leading-zero">
                 <h2 class="font-semibold text-xl">MENU-INFO.TS GENERATOR</h2>
                 <span class="text-xs right-0 leading-attached">Generate Section</span>
@@ -50,7 +83,49 @@
         </div>
 
         <form [formGroup]="menuSettingsForm" (ngSubmit)="generate(menuSettingsForm.value)">
-            <div id="parentMenu" *ngIf="isParentMenuAppear" class="container mx-auto">
+            <div id="syncMenuIcon" [hidden]="!isSyncMenuIconAppear" class="container mx-auto">
+                <form [formGroup]="syncMenuIconForm">
+                    <div class="grid grid-cols-4 overflow-y-scroll h-88">
+                        <ng-container *ngFor="let menuStructure of menuStructuresWithIconExist">
+                            <div class="p-2">
+                                <div class="rounded-lg border py-3 px-5 shadow-lg">
+                                    <form
+                                        [formGroupName]="'sync_form_'+menuStructure.menuId + menuStructure.menuSequence">
+                                        <label class="block mb-2.5">
+                                            <span class="block text-sm font-medium text-slate-700">Menu ID</span>
+                                            <input type="text" formControlName="menuId" [readOnly]="true"
+                                                class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none focus:border-indigo-500/100" />
+                                        </label>
+
+                                        <label class="block mb-2.5">
+                                            <span class="block text-sm font-medium text-slate-700">Menu Sequence</span>
+                                            <input type="text" formControlName="menuSequence" [readOnly]="true"
+                                                class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none focus:border-indigo-500/100" />
+                                        </label>
+
+                                        <label class="block mb-2.5">
+                                            <span class="block text-sm font-medium text-slate-700">Icon Class</span>
+                                            <input type="text" formControlName="iconClass" class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none 
+                                focus:border-indigo-500/100 focus:shadow-lg focus:shadow-indigo-500/40" />
+                                        </label>
+
+                                        <label class="relative block mb-2.5">
+                                            <span class="block text-sm font-medium text-slate-700">New Menu</span>
+                                            <autocomplete (onSelect)="onSelectAutoCompleteSyncMenuIcon($event)"
+                                                (onBlur)="onBlurAutoCompleteSyncMenuIcon($event)"
+                                                [suggestionDatas]="menuStructures" fieldName="newMenu" labelKey="menuId"
+                                                valueKey="menuSequence" otherDescKey="menuDesc">
+                                            </autocomplete>
+                                        </label>
+                                    </form>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
+                </form>
+            </div>
+
+            <div id="parentMenu" [hidden]="!isParentMenuAppear" class="container mx-auto">
                 <div class="px-2 mt-2 mb-4 flex justify-between">
                     <div>
                         <div class="flex">
@@ -67,8 +142,8 @@
                     </div>
                     <div class="order-last">
                         <label class="grid">
-                            <span class="text-sm font-medium text-slate-700">Search by Menu Sequence</span>
-                            <input type="text" (input)="onSearchParentMenuBySequence($event)"
+                            <span class="text-sm font-medium text-slate-700">Search</span>
+                            <input type="text" placeholder="menuId menuSequence" (input)="onSearchParentMenu($event)"
                                 class="border max-w-60 text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none focus:border-indigo-500/100" />
                         </label>
                     </div>
@@ -76,19 +151,13 @@
 
                 <form [formGroup]="parentMenuForm">
                     <div class="grid grid-cols-4 overflow-y-scroll h-88">
-                        <div *ngFor="let menuStructure of parentMenuStructures">
+                        <div *ngFor="let menuStructure of parentTempMenuStructures">
                             <div class="p-2">
                                 <div class="rounded-lg border py-3 px-5 shadow-lg">
                                     <form [formGroupName]="'form_'+menuStructure.modulId">
                                         <label class="block mb-2.5">
                                             <span class="block text-sm font-medium text-slate-700">Menu ID</span>
                                             <input type="text" formControlName="menuId" [readOnly]="true"
-                                                class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none focus:border-indigo-500/100" />
-                                        </label>
-                                        
-                                        <label class="block mb-2.5">
-                                            <span class="block text-sm font-medium text-slate-700">Variable</span>
-                                            <input type="text" formControlName="variable" [readOnly]="true"
                                                 class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none focus:border-indigo-500/100" />
                                         </label>
 
@@ -118,7 +187,7 @@
                 </form>
             </div>
 
-            <div id="childMenu" *ngIf="isChildMenuAppear" class="container end-0">
+            <!-- <div id="childMenu" *ngIf="isChildMenuAppear" class="container end-0">
                 <div class="px-2 mt-2 mb-4 flex justify-between">
                     <div>
                         <div class="flex">
@@ -189,7 +258,7 @@
                         </div>
                     </div>
                 </form>
-            </div>
+            </div> -->
 
             <div class="mx-auto w-2/6 flex justify-between mt-8">
                 <button type="button"
@@ -210,9 +279,9 @@
     <div id="downloadSection" [className]="'container absolute grid ' + downloadSectionClass">
         <form [formGroup]="copyFileTSContentForm" (ngSubmit)="copyText(copyFileTSContentForm.value.content)">
             <div class="absolute right-0 mr-5 mt-1 group bg-white cursor-pointer hover:bg-slate-500 ">
-                <button type="submit"
-                    class="p-2 outline-none drop-shadow">
-                    <fa-icon [icon]="['far', 'file-clipboard']" [className]="'text-4xl text-slate-500 group-hover:text-white group-hover:text-white'"></fa-icon>
+                <button type="submit" class="p-2 outline-none drop-shadow">
+                    <fa-icon [icon]="['far', 'file-clipboard']"
+                        [className]="'text-4xl text-slate-500 group-hover:text-white group-hover:text-white'"></fa-icon>
                 </button>
                 <div
                     class="hidden group-hover:block border text-start bg-indigo-200/20 border-indigo-300/20 drop-shadow-md leading-none p-2 rounded-md absolute top-10 right-10">

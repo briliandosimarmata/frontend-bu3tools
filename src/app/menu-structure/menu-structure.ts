@@ -4,6 +4,7 @@ export class MenuStructure {
     menuSequence?: string = '';
     menuDesc?: string = '';
     modulId?: string = '';
+    modulType?: ModulType = undefined;
     iconClass?: string = '';
     routingPath?: string = '';
 
@@ -31,4 +32,8 @@ export class MenuStructure {
     }
 }
 
+export enum ModulType {
+    'M' = 'M',
+    'P' = 'P'
+}
 
