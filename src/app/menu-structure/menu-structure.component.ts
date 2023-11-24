@@ -314,9 +314,9 @@ export class MenuStructureComponent implements OnInit {
 
         menuInfoList = readMenuData(ev.target?.result,
           uploadParam?.menuListVariableName);
-
-        isMenuInfoListReady = true;
       }
+
+      isMenuInfoListReady = true;
     }
 
     frModulUrlInfo.onload = (ev) => {
@@ -325,9 +325,9 @@ export class MenuStructureComponent implements OnInit {
 
         modulUrlInfoList = readModulUrlData(ev.target?.result,
           uploadParam?.modulUrlListVariableName);
-
-        isModulUrlInfoListReady = true;
       }
+
+      isModulUrlInfoListReady = true;
     }
 
     let doMapMenuInfoData = () => {
@@ -412,7 +412,13 @@ export class MenuStructureComponent implements OnInit {
 
     doMapMenuInfoData();
 
-    frMenuInfo.readAsText(uploadParam?.fileMenuInfo);
+    if (uploadParam?.fileMenuInfo !== undefined
+      && uploadParam?.fileMenuInfo !== null) {
+      frMenuInfo.readAsText(uploadParam?.fileMenuInfo);
+    } else {
+      isMenuInfoListReady = true;
+    }
+
     frModulUrlInfo.readAsText(uploadParam?.fileModulUrlInfo);
   }
 
@@ -517,32 +523,37 @@ export class MenuStructureComponent implements OnInit {
   protected onUpload(uploadParam: UploadParam) {
     this.urlApi = uploadParam.table;
 
-    if ((uploadParam.menuListVariableName === undefined
-      || uploadParam.menuListVariableName.trim().length === 0)
-      || (uploadParam.modulUrlListVariableName === undefined
-        || uploadParam.modulUrlListVariableName.trim().length === 0)) {
+    if (uploadParam.modulUrlListVariableName === undefined
+      || uploadParam.modulUrlListVariableName.trim().length === 0) {
       this.toastMessageService.error(null, true, {
         code: 'Nama Variable Kosong',
-        description: `Semua nama variable wajib diisi!`
+        description: `Nama variable modul-url-info.ts wajib diisi!`
       });
       return;
     }
 
-    if (uploadParam.fileMenuInfo === undefined
-      || uploadParam.fileMenuInfo === null
-      || uploadParam.fileModulUrlInfo === undefined
+    if ((uploadParam.fileMenuInfo !== undefined
+      || uploadParam.fileMenuInfo !== null) &&
+      (uploadParam.menuListVariableName === undefined
+        || uploadParam.menuListVariableName.trim().length === 0)) {
+      this.toastMessageService.error(null, true, {
+        code: 'Nama Variable Kosong',
+        description: `Nama variable menu-info.ts wajib diisi!`
+      });
+      return;
+    }
+
+    if (uploadParam.fileModulUrlInfo === undefined
       || uploadParam.fileModulUrlInfo === null) {
       this.toastMessageService.error(null, true, {
         code: 'File Belum Diunggah.',
-        description: `Anda harus menggungah file terlebih dahulu!`
+        description: `Anda harus menggungah file modul-url-info.ts terlebih dahulu!`
       });
       return;
     }
 
-    if ((!uploadParam.fileMenuInfo.name.split('.')[1].match('ts')
-      && !uploadParam.fileMenuInfo.type.match('text/vnd.qt.linguist'))
-      || (!uploadParam.fileModulUrlInfo.name.split('.')[1].match('ts')
-        && !uploadParam.fileModulUrlInfo.type.match('text/vnd.qt.linguist'))) {
+    if (!uploadParam.fileModulUrlInfo.name.split('.')[1].match('ts')
+      && !uploadParam.fileModulUrlInfo.type.match('text/vnd.qt.linguist')) {
       this.toastMessageService.error(null, true, {
         code: 'Ektensi File Salah.',
         description: `Ektensi file harus '.ts' dengan tipe 'text/vnd.qt.linguist'!`

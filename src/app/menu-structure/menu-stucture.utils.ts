@@ -203,43 +203,56 @@ export const mapMenuInfoData = (menuInfoList: MenuInfo[],
     let menuStructuresWithIconExist: MenuStructure[] = [];
     let newModulUrlInfoList: MenuStructure[] = [];
 
-    menuInfoList.filter(
-        (menuInfo) => {
-            return menuInfo.url !== undefined || menuInfo.icon !== undefined
-        }
-    ).forEach(
-        (menuInfo) => {
-            // let 
-            if (menuInfo.url !== undefined && menuInfo.url.trim().length > 0) {
-                modulUrlInfoList.forEach(
-                    (modulUrlInfo) => {
-                        if (menuInfo.url === modulUrlInfo.url) {
-                            let newModulUrlInfo: MenuStructure = {
-                                modulId: modulUrlInfo.modulId,
-                                routingPath: modulUrlInfo.url,
-                                iconClass: menuInfo.icon,
-                                variable: menuInfo.variable
-                            };
-                            newModulUrlInfoList.push(newModulUrlInfo);
-                            return;
-                        } else {
-                            return;
+    if (menuInfoList && modulUrlInfoList
+        && menuInfoList.length > 0 && modulUrlInfoList.length > 0) {
+        menuInfoList.filter(
+            (menuInfo) => {
+                return menuInfo.url !== undefined || menuInfo.icon !== undefined
+            }
+        ).forEach(
+            (menuInfo) => {
+                if (menuInfo.url !== undefined && menuInfo.url.trim().length > 0) {
+                    modulUrlInfoList.forEach(
+                        (modulUrlInfo) => {
+                            if (menuInfo.url === modulUrlInfo.url) {
+                                let newModulUrlInfo: MenuStructure = {
+                                    modulId: modulUrlInfo.modulId,
+                                    routingPath: modulUrlInfo.url,
+                                    iconClass: menuInfo.icon,
+                                    variable: menuInfo.variable
+                                };
+                                newModulUrlInfoList.push(newModulUrlInfo);
+                                return;
+                            } else {
+                                return;
+                            }
                         }
-                    }
-                );
-            } else if (menuInfo.icon !== undefined
-                && menuInfo.icon?.trim().length > 0) {
+                    );
+                } else if (menuInfo.icon !== undefined
+                    && menuInfo.icon?.trim().length > 0) {
 
-                let menuStructIconExist: MenuStructure = {
-                    menuId: menuInfo.menuId,
-                    menuSequence: menuInfo.menuSequence,
-                    iconClass: menuInfo.icon
+                    let menuStructIconExist: MenuStructure = {
+                        menuId: menuInfo.menuId,
+                        menuSequence: menuInfo.menuSequence,
+                        iconClass: menuInfo.icon
+                    };
+
+                    menuStructuresWithIconExist.push(menuStructIconExist);
+                }
+            }
+        );
+    } else {
+        modulUrlInfoList.forEach(
+            (modulUrlInfo) => {
+                let newModulUrlInfo: MenuStructure = {
+                    modulId: modulUrlInfo.modulId,
+                    routingPath: modulUrlInfo.url
                 };
 
-                menuStructuresWithIconExist.push(menuStructIconExist);
+                newModulUrlInfoList.push(newModulUrlInfo);
             }
-        }
-    );
+        );
+    }
 
     return {
         menuInfoList: menuStructuresWithIconExist,

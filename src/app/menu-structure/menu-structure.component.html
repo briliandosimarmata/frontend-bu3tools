@@ -22,23 +22,23 @@
                 </div>
             </label>
 
-            <label class="grid mt-4">
-                <span class="block text-sm font-medium text-slate-700">Menu List Variable Name</span>
-                <input #menuVarNameInput type="text" value="MENU_INFO_LIST" class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none 
-            focus:border-indigo-500/100 focus:shadow-lg focus:shadow-indigo-500/40" />
-            </label>
-
             <label class="grid mt-4 mb-2">
                 <span class="block text-sm font-medium text-slate-700">Modul Url List Variable Name</span>
                 <input #modulUrlVarNameInput type="text" value="MODUL_URL_INFO_LIST" class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none 
             focus:border-indigo-500/100 focus:shadow-lg focus:shadow-indigo-500/40" />
             </label>
 
+            <label class="grid mt-4">
+                <span class="block text-sm font-medium text-slate-700">Menu List Variable Name</span>
+                <input #menuVarNameInput type="text" value="MENU_INFO_LIST" class="border w-full block text-sm font-medium px-3 py-2 rounded-md border-slate-300 disabled:bg-slate-100 focus:outline-none 
+            focus:border-indigo-500/100 focus:shadow-lg focus:shadow-indigo-500/40" />
+            </label>
+
             <label class="grid mt-6">
                 <div class="flex relative justify-center py-4 px-2 border-2 border-slate-700 rounded-lg">
                     <span class="absolute bg-white px-1 font-medium text-slate-700 -top-3 left-2">File
-                        menu-info.ts</span>
-                    <input #fileMenuInfoTSInput type="file"
+                        modul-url-info.ts</span>
+                    <input #fileModulUrlInfoTSInput type="file"
                         class="p-6 -m-6 hover:file:cursor-pointer file:drop-shadow-lg file:rounded-full file:py-1 file:px-4 file:border-indigo-200/30 file:bg-indigo-50 file:font-semibold file:text-indigo-700"
                         [multiple]="false" />
                 </div>
@@ -47,8 +47,8 @@
             <label class="grid mt-6">
                 <div class="flex relative justify-center py-4 px-2 border-2 border-slate-700 rounded-lg">
                     <span class="absolute bg-white px-1 font-medium text-slate-700 -top-3 left-2">File
-                        modul-url-info.ts</span>
-                    <input #fileModulUrlInfoTSInput type="file"
+                        menu-info.ts</span>
+                    <input #fileMenuInfoTSInput type="file"
                         class="p-6 -m-6 hover:file:cursor-pointer file:drop-shadow-lg file:rounded-full file:py-1 file:px-4 file:border-indigo-200/30 file:bg-indigo-50 file:font-semibold file:text-indigo-700"
                         [multiple]="false" />
                 </div>

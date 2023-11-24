@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --configuration production --named-chunks --base-href .",
-    "postbuild": "mkdir dist/bu3-tools/.sourceMaps; mv dist/bu3-tools/*.map dist/bu3-tools/.sourceMaps",
+    "postbuild": "mkdir dist/bu3-tools/.sourceMaps; mv dist/bu3-tools/*.map dist/bu3-tools/.sourceMaps; cd dist/bu3-tools; zip -r bu3-tools.war ./.",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
