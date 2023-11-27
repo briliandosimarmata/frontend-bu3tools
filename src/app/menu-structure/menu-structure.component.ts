@@ -363,7 +363,6 @@ export class MenuStructureComponent implements OnInit {
 
                 if (res.data) {
                   menus = res.data;
-                  console.log(res.data);
                 }
 
                 menus.forEach(
@@ -606,7 +605,4 @@ export class MenuStructureComponent implements OnInit {
     this.generatorSectionClass = ' transition duration-500 ease-in translate-x-0 opacity-100 ';
   }
 
-  log(data: any) {
-    console.log(data);
-  }
 }

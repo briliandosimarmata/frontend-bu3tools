@@ -241,18 +241,26 @@ export const mapMenuInfoData = (menuInfoList: MenuInfo[],
                 }
             }
         );
-    } else {
-        modulUrlInfoList.forEach(
-            (modulUrlInfo) => {
-                let newModulUrlInfo: MenuStructure = {
+    }
+
+    modulUrlInfoList.forEach(
+        (modulUrlInfo) => {
+            const isModulUrlInfoHasNotExist = newModulUrlInfoList.findIndex(
+                (newModulUrlInfo) => {
+                    return newModulUrlInfo.modulId === modulUrlInfo.modulId;
+                }
+            ) === -1;
+
+            if (isModulUrlInfoHasNotExist) {
+                const newModulUrlInfo: MenuStructure = {
                     modulId: modulUrlInfo.modulId,
                     routingPath: modulUrlInfo.url
                 };
 
                 newModulUrlInfoList.push(newModulUrlInfo);
             }
-        );
-    }
+        }
+    );
 
     return {
         menuInfoList: menuStructuresWithIconExist,
