@@ -13,8 +13,8 @@ export const readModulUrlData = (content: string, key: string) => {
     //give space per variable declaration
     content = content.replace(/exportinterface|interface/g, '\ninterface ');
     content = content.replace(/exportconst|const/g, '\nconst ');
-    content = content.replace(/exportlet|let/g, '\nlet ');
-    content = content.replace(/exportvar|var/g, '\nvar ');
+    // content = content.replace(/exportlet|let/g, '\nlet ');
+    // content = content.replace(/exportvar|var/g, '\nvar ');
 
     //match character begin the key until '=[' and end with ']\n' or last ']'
     let regexForFindModulUrlArrContent = new RegExp(`(?:${key}.*?\\=\\[)(.*?)(?:\\]\n|\\]|\\]\\;|\\]\\;\n)$`);
@@ -110,8 +110,8 @@ export const readMenuData = (content: string, key: string) => {
     //give space per variable declaration
     content = content.replace(/exportinterface|interface/g, '\ninterface ');
     content = content.replace(/exportconst|const/g, '\nconst ');
-    content = content.replace(/exportlet|let/g, '\nlet ');
-    content = content.replace(/exportvar|var/g, '\nvar ');
+    // content = content.replace(/exportlet|let/g, '\nlet ');
+    // content = content.replace(/exportvar|var/g, '\nvar ');
 
     //match character begin the key until '=[' and end with ']\n' or last ']'
     let regexForFindMenuArrContent = new RegExp(`(?:${key}.*?\\=\\[)(.*?)(?:\\](?:$|\\;\n|\n))`);
